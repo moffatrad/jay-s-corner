@@ -1,0 +1,155 @@
+<div class="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-2xl font-bold text-gray-900">Manage Products</h1>
+    <button (click)="openCreate()" class="bg-brand-600 hover:bg-brand-700 text-white font-semibold px-4 py-2 rounded-lg text-sm">
+      + New Product
+    </button>
+  </div>
+
+  @if (loading()) {
+    <p class="text-gray-500">Loading…</p>
+  } @else {
+    <div class="overflow-x-auto bg-white border border-gray-200 rounded-xl">
+      <table class="min-w-full text-sm">
+        <thead class="bg-gray-50 text-left text-gray-500 text-xs uppercase tracking-wide">
+          <tr>
+            <th class="px-4 py-3">Product</th>
+            <th class="px-4 py-3">Category</th>
+            <th class="px-4 py-3">Price</th>
+            <th class="px-4 py-3">Stock</th>
+            <th class="px-4 py-3">Availability</th>
+            <th class="px-4 py-3">Status</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          @for (p of products(); track p.id) {
+            <tr>
+              <td class="px-4 py-3 flex items-center gap-3">
+                <img [src]="p.images[0] ?? 'https://placehold.co/80x80?text=No+Image'" class="w-10 h-10 rounded-lg object-cover bg-gray-100" alt="" />
+                <span class="font-medium text-gray-900">{{ p.name }}</span>
+              </td>
+              <td class="px-4 py-3 text-gray-600">{{ p.category }}</td>
+              <td class="px-4 py-3 text-gray-900 font-medium">{{ p.price | jcCurrency }}</td>
+              <td class="px-4 py-3 text-gray-600">{{ p.stockQuantity }}</td>
+              <td class="px-4 py-3">
+                @if (p.availability === 'READILY_AVAILABLE') {
+                  <span class="text-xs font-medium bg-green-100 text-green-700 px-2 py-1 rounded-full">Readily available</span>
+                } @else {
+                  <span class="text-xs font-medium bg-amber-100 text-amber-700 px-2 py-1 rounded-full">By order</span>
+                }
+              </td>
+              <td class="px-4 py-3">
+                @if (p.isActive) {
+                  <span class="text-xs font-medium bg-green-100 text-green-700 px-2 py-1 rounded-full">Active</span>
+                } @else {
+                  <span class="text-xs font-medium bg-gray-100 text-gray-500 px-2 py-1 rounded-full">Hidden</span>
+                }
+              </td>
+              <td class="px-4 py-3 text-right whitespace-nowrap">
+                <button (click)="openEdit(p)" class="text-brand-600 hover:underline text-sm mr-3">Edit</button>
+                <button (click)="remove(p)" class="text-red-500 hover:underline text-sm">Delete</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (showForm()) {
+    <div class="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" (click)="cancelForm()">
+      <div class="bg-white rounded-xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto" (click)="$event.stopPropagation()">
+        <h2 class="text-lg font-bold text-gray-900 mb-4">{{ form.id ? 'Edit' : 'New' }} Product</h2>
+
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Name</label>
+            <input [(ngModel)]="form.name" name="name" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Description</label>
+            <textarea [(ngModel)]="form.description" name="description" rows="3" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"></textarea>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Price (BWP)</label>
+              <input type="number" step="0.01" [(ngModel)]="form.price" name="price" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-700 mb-1">Stock quantity</label>
+              <input type="number" [(ngModel)]="form.stockQuantity" name="stockQuantity" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Category</label>
+            <input [(ngModel)]="form.category" name="category" placeholder="e.g. Clothing, Electronics, Jewelry, Shoes, Kitchenware" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Availability</label>
+            <select [(ngModel)]="form.availability" name="availability" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm">
+              <option value="READILY_AVAILABLE">Readily available</option>
+              <option value="BY_ORDER">By order</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-700 mb-1">Images</label>
+
+            @if (form.images.length > 0) {
+              <div class="flex flex-wrap gap-2 mb-2">
+                @for (img of form.images; track img; let i = $index) {
+                  <div class="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200 group">
+                    <img [src]="img" class="w-full h-full object-cover" alt="" />
+                    <button
+                      type="button"
+                      (click)="removeImage(i)"
+                      class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold"
+                      aria-label="Remove image"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+
+            <label class="flex items-center justify-center gap-2 border border-dashed border-gray-300 rounded-lg px-3 py-2.5 text-sm text-gray-600 cursor-pointer hover:border-brand-400 hover:text-brand-600 transition">
+              @if (uploading()) {
+                <span>Uploading…</span>
+              } @else {
+                <span>Upload images</span>
+              }
+              <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple class="hidden" (change)="onFilesSelected($event)" [disabled]="uploading()" />
+            </label>
+
+            <div class="flex items-center gap-2 mt-2">
+              <input
+                [(ngModel)]="form.newImageUrl"
+                name="newImageUrl"
+                (keydown.enter)="$event.preventDefault(); addImageUrl()"
+                placeholder="Or paste an image URL"
+                class="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              />
+              <button type="button" (click)="addImageUrl()" class="text-sm font-semibold text-brand-600 hover:underline shrink-0">Add</button>
+            </div>
+          </div>
+          <label class="flex items-center gap-2 text-sm text-gray-700">
+            <input type="checkbox" [(ngModel)]="form.isActive" name="isActive" class="rounded border-gray-300 text-brand-600" />
+            Visible to customers
+          </label>
+
+          @if (error()) {
+            <p class="text-sm text-red-600">{{ error() }}</p>
+          }
+        </div>
+
+        <div class="flex gap-3 mt-5">
+          <button (click)="cancelForm()" class="flex-1 border border-gray-300 rounded-lg py-2 text-sm font-medium text-gray-700">Cancel</button>
+          <button (click)="save()" [disabled]="saving() || uploading()" class="flex-1 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-lg py-2 text-sm font-semibold">
+            {{ saving() ? 'Saving…' : 'Save' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,89 @@
+<div class="max-w-2xl mx-auto px-4 sm:px-6 py-6 flex flex-col" style="min-height: calc(100vh - 4rem);">
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <h1 class="text-xl font-bold text-gray-900">Order Chat</h1>
+      <p class="text-xs text-gray-500">
+        @if (chat.connected()) {
+          <span class="text-green-600">● Connected</span>
+        } @else {
+          <span class="text-amber-600">● Reconnecting…</span>
+        }
+        @if (conversation()?.status) {
+          <span class="ml-2 inline-block bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full text-xs font-medium">
+            {{ conversation()!.status }}
+          </span>
+        }
+      </p>
+    </div>
+    <a routerLink="/account" class="text-sm text-brand-600 hover:underline">My orders</a>
+  </div>
+
+  <div class="flex-1 overflow-y-auto bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-4 mb-4">
+    @if (loading()) {
+      <p class="text-gray-500 text-sm">Loading conversation…</p>
+    } @else if (messages().length === 0) {
+      <p class="text-gray-500 text-sm">No messages yet.</p>
+    }
+
+    @for (msg of messages(); track msg.id) {
+      <div class="flex" [class.justify-end]="msg.senderId === auth.user()?.id">
+        @if (msg.type === 'ORDER_SUMMARY') {
+          <app-order-summary-card [summary]="parseOrderSummary(msg.content)" />
+        } @else if (msg.type === 'IMAGE') {
+          <a [href]="msg.content" target="_blank" rel="noopener" class="block max-w-[75%] rounded-2xl overflow-hidden border border-gray-200">
+            <img [src]="msg.content" alt="Attached image" class="max-h-72 w-auto object-cover" />
+          </a>
+        } @else {
+          <div
+            class="max-w-[75%] rounded-2xl px-4 py-2 text-sm"
+            [class.bg-brand-600]="msg.senderId === auth.user()?.id"
+            [class.text-white]="msg.senderId === auth.user()?.id"
+            [class.bg-white]="msg.senderId !== auth.user()?.id"
+            [class.border]="msg.senderId !== auth.user()?.id"
+            [class.border-gray-200]="msg.senderId !== auth.user()?.id"
+          >
+            {{ msg.content }}
+          </div>
+        }
+      </div>
+    }
+    @if (uploadingImage()) {
+      <div class="flex justify-end">
+        <div class="max-w-[75%] rounded-2xl px-4 py-2 text-sm bg-brand-600/60 text-white">Uploading image…</div>
+      </div>
+    }
+    <div #scrollAnchor></div>
+  </div>
+
+  @if (imageError()) {
+    <p class="text-xs text-red-600 mb-2">{{ imageError() }}</p>
+  }
+
+  <form (ngSubmit)="send()" class="flex items-center gap-2">
+    <label
+      class="shrink-0 p-2.5 rounded-full border border-gray-300 text-gray-500 hover:text-brand-600 hover:border-brand-400 transition cursor-pointer"
+      [class.opacity-50]="uploadingImage()"
+      aria-label="Attach an image"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
+      </svg>
+      <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden" [disabled]="uploadingImage()" (change)="onImageSelected($event)" />
+    </label>
+    <input
+      type="text"
+      name="draft"
+      [(ngModel)]="draft"
+      placeholder="Type a message…"
+      class="flex-1 rounded-full border border-gray-300 px-4 py-2.5 text-sm focus:ring-brand-500 focus:border-brand-500"
+      autocomplete="off"
+    />
+    <button
+      type="submit"
+      [disabled]="!draft.trim() || sending()"
+      class="bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-semibold px-5 py-2.5 rounded-full transition"
+    >
+      Send
+    </button>
+  </form>
+</div>

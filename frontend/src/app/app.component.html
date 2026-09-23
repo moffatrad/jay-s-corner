@@ -1,0 +1,200 @@
+<div class="min-h-screen flex flex-col bg-white">
+  <header class="bg-white/95 backdrop-blur sticky top-0 z-30 border-b border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="flex items-center gap-4 sm:gap-8 h-16">
+        <a routerLink="/products" class="flex items-center font-black text-2xl tracking-tight text-gray-900 shrink-0">
+          JAY'S<span class="text-brand-600">CORNER</span>
+        </a>
+
+        <!-- Search bar -->
+        <form (ngSubmit)="submitSearch()" class="hidden sm:flex flex-1 max-w-xl">
+          <div class="relative w-full">
+            <input
+              type="text"
+              name="search"
+              [(ngModel)]="searchQuery"
+              (focus)="onSearchFocus()"
+              (blur)="onSearchBlur()"
+              placeholder="Search products…"
+              autocomplete="off"
+              class="w-full bg-gray-100 border rounded-full pl-4 pr-10 py-2.5 text-sm placeholder:text-gray-500 focus:bg-white focus:outline-none transition"
+              [class.border-transparent]="!searchFocused()"
+              [class.border-gray-300]="searchFocused()"
+            />
+            <button type="submit" aria-label="Search" class="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              </svg>
+            </button>
+
+            @if (searchFocused() && (recentSearches().length > 0 || categories().length > 0)) {
+              <div class="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg py-3 z-40 text-left">
+                @if (recentSearches().length > 0) {
+                  <div class="px-4 pb-2">
+                    <p class="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-2">Recent searches</p>
+                    <div class="flex flex-wrap gap-2">
+                      @for (term of recentSearches(); track term) {
+                        <button type="button" (click)="searchFor(term)" class="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">
+                          {{ term }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+                @if (categories().length > 0) {
+                  <div class="px-4 pt-2" [class.border-t]="recentSearches().length > 0" [class.border-gray-100]="recentSearches().length > 0">
+                    <p class="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-2 mt-1">Popular categories</p>
+                    <div class="flex flex-wrap gap-2">
+                      @for (cat of categories(); track cat) {
+                        <button type="button" (click)="goToCategory(cat)" class="px-3 py-1 rounded-full border border-gray-200 hover:border-brand-400 hover:text-brand-600 text-xs font-medium text-gray-700 transition">
+                          {{ cat }}
+                        </button>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        </form>
+
+        <div class="flex items-center gap-1 sm:gap-2 ml-auto">
+          @if (auth.isLoggedIn()) {
+            <div class="relative" (mouseenter)="openProfileMenu()" (mouseleave)="closeProfileMenu()">
+              <button
+                type="button"
+                (click)="toggleProfileMenu()"
+                class="flex p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition"
+                aria-label="My account"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                </svg>
+              </button>
+
+              @if (profileMenuOpen()) {
+                <div class="fixed inset-0 z-40 md:hidden" (click)="closeProfileMenu()"></div>
+                <div class="absolute right-0 top-full pt-2 w-52 z-50">
+                  <div class="bg-white border border-gray-200 rounded-xl shadow-lg py-2">
+                    <p class="px-4 py-1.5 text-xs text-gray-400 truncate">{{ auth.user()?.email }}</p>
+                    @if (auth.isAdmin()) {
+                      <a routerLink="/admin/profile" (click)="closeProfileMenu()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
+                      <a routerLink="/admin/orders" (click)="closeProfileMenu()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Orders</a>
+                      <a routerLink="/admin/inbox" (click)="closeProfileMenu()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Messages</a>
+                      <a routerLink="/admin/reviews" (click)="closeProfileMenu()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Reviews</a>
+                      <a routerLink="/admin/products" (click)="closeProfileMenu()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Products</a>
+                    } @else {
+                      <a routerLink="/account" (click)="closeProfileMenu()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">My Profile</a>
+                      <a routerLink="/account/orders" (click)="closeProfileMenu()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Orders</a>
+                      <a routerLink="/account/messages" (click)="closeProfileMenu()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Messages</a>
+                      <a routerLink="/account/reviews" (click)="closeProfileMenu()" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Reviews</a>
+                    }
+                    <div class="border-t border-gray-100 mt-1 pt-1">
+                      <button (click)="logout()" class="w-full text-left px-4 py-2 text-sm text-gray-500 hover:bg-gray-50">Log out</button>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <a routerLink="/login" class="flex items-center rounded-full bg-gray-100 hover:bg-gray-200 transition px-4 py-2 text-sm font-semibold text-slate-700">
+              Sign in
+            </a>
+          }
+
+          @if (auth.isLoggedIn()) {
+            <a
+              [routerLink]="auth.isAdmin() ? '/admin/inbox' : '/account/messages'"
+              class="relative p-2 rounded-full hover:bg-gray-100"
+              aria-label="Notifications"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+              </svg>
+              @if (notifications.unreadCount() > 0) {
+                <span class="absolute -top-0.5 -right-0.5 bg-brand-600 text-white text-[10px] font-bold rounded-full h-4.5 min-w-[1.125rem] px-1 flex items-center justify-center">
+                  {{ notifications.unreadCount() }}
+                </span>
+              }
+            </a>
+          }
+
+          <a routerLink="/cart" class="relative p-2 rounded-full hover:bg-gray-100" aria-label="Cart">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.836l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 1.983-4.847 2.523-7.5H5.106M7.5 14.25L5.106 5.25M7.5 14.25l-1.393 3.633M17.25 17.25a1.125 1.125 0 100 2.25 1.125 1.125 0 000-2.25zM9 17.25a1.125 1.125 0 100 2.25 1.125 1.125 0 000-2.25z" />
+            </svg>
+            @if (cart.cart().itemCount > 0) {
+              <span class="absolute -top-0.5 -right-0.5 bg-brand-600 text-white text-[10px] font-bold rounded-full h-4.5 min-w-[1.125rem] px-1 flex items-center justify-center">
+                {{ cart.cart().itemCount }}
+              </span>
+            }
+          </a>
+        </div>
+      </div>
+
+      <!-- Mobile search -->
+      <form (ngSubmit)="submitSearch()" class="sm:hidden pb-3">
+        <div class="relative w-full">
+          <input
+            type="text"
+            name="search-mobile"
+            [(ngModel)]="searchQuery"
+            (focus)="onSearchFocus()"
+            (blur)="onSearchBlur()"
+            placeholder="Search products…"
+            autocomplete="off"
+            class="w-full bg-gray-100 border rounded-full pl-4 pr-10 py-2.5 text-sm placeholder:text-gray-500 focus:bg-white focus:outline-none transition"
+            [class.border-transparent]="!searchFocused()"
+            [class.border-gray-300]="searchFocused()"
+          />
+          <button type="submit" aria-label="Search" class="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+            </svg>
+          </button>
+
+          @if (searchFocused() && (recentSearches().length > 0 || categories().length > 0)) {
+            <div class="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg py-3 z-40 text-left">
+              @if (recentSearches().length > 0) {
+                <div class="px-4 pb-2">
+                  <p class="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-2">Recent searches</p>
+                  <div class="flex flex-wrap gap-2">
+                    @for (term of recentSearches(); track term) {
+                      <button type="button" (click)="searchFor(term)" class="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-xs font-medium text-gray-700 transition">
+                        {{ term }}
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+              @if (categories().length > 0) {
+                <div class="px-4 pt-2" [class.border-t]="recentSearches().length > 0" [class.border-gray-100]="recentSearches().length > 0">
+                  <p class="text-[11px] font-bold uppercase tracking-wide text-gray-400 mb-2 mt-1">Popular categories</p>
+                  <div class="flex flex-wrap gap-2">
+                    @for (cat of categories(); track cat) {
+                      <button type="button" (click)="goToCategory(cat)" class="px-3 py-1 rounded-full border border-gray-200 hover:border-brand-400 hover:text-brand-600 text-xs font-medium text-gray-700 transition">
+                        {{ cat }}
+                      </button>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </form>
+
+    </div>
+  </header>
+
+  <main class="flex-1">
+    <router-outlet />
+  </main>
+
+  <footer class="bg-white border-t border-gray-100 mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-8 text-sm text-gray-500 flex flex-col sm:flex-row justify-between gap-2">
+      <p>&copy; {{ '' + (2026) }} Jay's Corner. All rights reserved.</p>
+      <p>Questions about an order? Start a chat with us right from your cart.</p>
+    </div>
+  </footer>
+</div>

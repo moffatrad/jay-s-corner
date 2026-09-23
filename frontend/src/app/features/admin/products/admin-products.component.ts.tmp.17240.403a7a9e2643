@@ -1,0 +1,133 @@
+import { Component, OnInit, signal } from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { ProductService } from "../../../core/services/product.service";
+import { Product, ProductAvailability } from "../../../core/models/models";
+import { CurrencyPipe } from "../../../shared/pipes/currency.pipe";
+
+type ProductFormModel = {
+  id: string | null;
+  name: string;
+  description: string;
+  price: number | null;
+  imagesText: string;
+  category: string;
+  stockQuantity: number | null;
+  availability: ProductAvailability;
+  isActive: boolean;
+};
+
+function emptyForm(): ProductFormModel {
+  return {
+    id: null,
+    name: "",
+    description: "",
+    price: null,
+    imagesText: "",
+    category: "",
+    stockQuantity: 0,
+    availability: "READILY_AVAILABLE",
+    isActive: true,
+  };
+}
+
+@Component({
+  selector: "app-admin-products",
+  standalone: true,
+  imports: [FormsModule, CurrencyPipe],
+  templateUrl: "./admin-products.component.html",
+})
+export class AdminProductsComponent implements OnInit {
+  products = signal<Product[]>([]);
+  loading = signal(true);
+  showForm = signal(false);
+  saving = signal(false);
+  error = signal<string | null>(null);
+
+  form: ProductFormModel = emptyForm();
+
+  constructor(private productService: ProductService) {}
+
+  ngOnInit() {
+    this.load();
+  }
+
+  load() {
+    this.loading.set(true);
+    this.productService.list().subscribe({
+      next: (res) => {
+        this.products.set(res.products);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
+    });
+  }
+
+  openCreate() {
+    this.form = emptyForm();
+    this.error.set(null);
+    this.showForm.set(true);
+  }
+
+  openEdit(product: Product) {
+    this.form = {
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      price: Number(product.price),
+      imagesText: product.images.join("\n"),
+      category: product.category,
+      stockQuantity: product.stockQuantity,
+      availability: product.availability,
+      isActive: product.isActive,
+    };
+    this.error.set(null);
+    this.showForm.set(true);
+  }
+
+  cancelForm() {
+    this.showForm.set(false);
+  }
+
+  save() {
+    if (!this.form.name || !this.form.description || this.form.price === null || !this.form.category) {
+      this.error.set("Name, description, price and category are required.");
+      return;
+    }
+
+    const payload = {
+      name: this.form.name,
+      description: this.form.description,
+      price: this.form.price,
+      images: this.form.imagesText
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      category: this.form.category,
+      stockQuantity: this.form.stockQuantity ?? 0,
+      availability: this.form.availability,
+      isActive: this.form.isActive,
+    };
+
+    this.saving.set(true);
+    const req = this.form.id
+      ? this.productService.update(this.form.id, payload)
+      : this.productService.create(payload);
+
+    req.subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.showForm.set(false);
+        this.load();
+      },
+      error: (err) => {
+        this.saving.set(false);
+        this.error.set(err?.error?.error ?? "Failed to save product.");
+      },
+    });
+  }
+
+  remove(product: Product) {
+    if (!confirm(`Delete "${product.name}"? This cannot be undone.`)) return;
+    this.productService.delete(product.id).subscribe(() => this.load());
+  }
+}

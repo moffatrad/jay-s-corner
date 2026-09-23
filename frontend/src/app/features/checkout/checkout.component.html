@@ -1,0 +1,12 @@
+<div class="max-w-lg mx-auto px-4 sm:px-6 py-16 text-center">
+  @if (loading() && !error()) {
+    <p class="text-gray-500">Starting your order chat with Jay…</p>
+  }
+
+  @if (error()) {
+    <div class="space-y-4">
+      <p class="text-red-600 font-medium">{{ error() }}</p>
+      <a routerLink="/cart" class="text-brand-600 hover:underline">Back to cart</a>
+    </div>
+  }
+</div>

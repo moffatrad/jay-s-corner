@@ -1,0 +1,53 @@
+<div class="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+  <h1 class="text-2xl font-bold text-gray-900 mb-4">Admin</h1>
+  <app-profile-tabs />
+
+  <section>
+    <h2 class="font-semibold text-gray-900 mb-3">Reviews by Product</h2>
+
+    @if (loading()) {
+      <p class="text-gray-500 text-sm">Loading…</p>
+    } @else if (groups().length === 0) {
+      <p class="text-gray-500 text-sm">No reviews yet.</p>
+    } @else {
+      <div class="space-y-6">
+        @for (group of groups(); track group.productId) {
+          <div class="bg-white border border-gray-200 rounded-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <a [routerLink]="['/products', group.productId]" class="font-semibold text-gray-900 hover:text-brand-600 transition">
+                {{ group.productName }}
+              </a>
+              <div class="flex items-center gap-2">
+                <app-star-rating [rating]="group.average" />
+                <span class="text-xs text-gray-500">{{ group.average }} ({{ group.reviews.length }})</span>
+              </div>
+            </div>
+            <div class="space-y-3 divide-y divide-gray-100">
+              @for (r of group.reviews; track r.id) {
+                <div class="pt-3 first:pt-0">
+                  <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-gray-800">{{ r.customer?.name ?? 'Customer' }}</p>
+                    <p class="text-xs text-gray-400">{{ r.createdAt | date: 'mediumDate' }}</p>
+                  </div>
+                  <app-star-rating [rating]="r.rating" />
+                  @if (r.comment) {
+                    <p class="text-sm text-gray-600 mt-1">{{ r.comment }}</p>
+                  }
+                  @if (r.images.length > 0) {
+                    <div class="flex flex-wrap gap-2 mt-2">
+                      @for (img of r.images; track img) {
+                        <a [href]="img" target="_blank" rel="noopener" class="block w-14 h-14 rounded-lg overflow-hidden border border-gray-200">
+                          <img [src]="img" alt="Review photo" class="w-full h-full object-cover" />
+                        </a>
+                      }
+                    </div>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </section>
+</div>

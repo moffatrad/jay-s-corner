@@ -1,0 +1,39 @@
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+  <h1 class="text-2xl font-bold text-gray-900 mb-4">My Account</h1>
+  <app-profile-tabs />
+
+  <section>
+    <h2 class="font-semibold text-gray-900 mb-3">Messages with Jay</h2>
+
+    @if (loading()) {
+      <p class="text-gray-500 text-sm">Loading…</p>
+    } @else if (conversations().length === 0) {
+      <p class="text-gray-500 text-sm">No conversations yet. Add items to your cart and check out to start a chat with Jay.</p>
+    } @else {
+      <div class="space-y-3">
+        @for (c of conversations(); track c.id) {
+          <a
+            [routerLink]="['/chat', c.id]"
+            class="block bg-white border border-gray-200 rounded-xl p-4 hover:shadow-sm transition"
+          >
+            <div class="flex justify-between items-start">
+              <div>
+                <p class="font-medium text-gray-900 flex items-center gap-2">
+                  Order #{{ c.id.slice(-6) }}
+                  @if (c.unread) {
+                    <span class="h-2 w-2 rounded-full bg-brand-600"></span>
+                  }
+                </p>
+                <p class="text-xs text-gray-500">{{ c.createdAt | date: 'medium' }}</p>
+              </div>
+              <span class="text-xs font-medium bg-gray-100 text-gray-700 px-2 py-1 rounded-full">{{ c.status }}</span>
+            </div>
+            @if (c.order) {
+              <p class="text-sm text-gray-600 mt-2">Total: {{ c.order.total | jcCurrency }}</p>
+            }
+          </a>
+        }
+      </div>
+    }
+  </section>
+</div>

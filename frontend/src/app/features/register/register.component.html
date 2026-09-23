@@ -1,0 +1,83 @@
+<div class="max-w-sm mx-auto px-4 sm:px-6 py-16">
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">Create an account</h1>
+
+  <form (ngSubmit)="submit()" class="space-y-4">
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Name</label>
+      <input
+        type="text"
+        name="name"
+        required
+        [(ngModel)]="name"
+        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-brand-500 focus:border-brand-500"
+      />
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+      <input
+        type="email"
+        name="email"
+        required
+        [(ngModel)]="email"
+        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-brand-500 focus:border-brand-500"
+      />
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Phone number</label>
+      <input
+        type="tel"
+        name="phone"
+        required
+        placeholder="+267 71 234 567"
+        [(ngModel)]="phone"
+        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-brand-500 focus:border-brand-500"
+      />
+      @if (phone && !isPhoneValid) {
+        <p class="text-xs text-red-500 mt-1">That doesn't look like a real phone number.</p>
+      } @else {
+        <p class="text-xs text-gray-400 mt-1">Include a country code if you're outside Botswana, e.g. +27 for South Africa.</p>
+      }
+    </div>
+    <div>
+      <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+      <input
+        type="password"
+        name="password"
+        required
+        minlength="8"
+        [(ngModel)]="password"
+        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-brand-500 focus:border-brand-500"
+      />
+      <ul class="mt-1.5 space-y-0.5">
+        <li class="text-xs flex items-center gap-1.5" [class.text-green-600]="hasMinLength" [class.text-gray-400]="!hasMinLength">
+          <span>{{ hasMinLength ? '✓' : '·' }}</span> At least 8 characters
+        </li>
+        <li class="text-xs flex items-center gap-1.5" [class.text-green-600]="hasLetter" [class.text-gray-400]="!hasLetter">
+          <span>{{ hasLetter ? '✓' : '·' }}</span> A letter
+        </li>
+        <li class="text-xs flex items-center gap-1.5" [class.text-green-600]="hasNumber" [class.text-gray-400]="!hasNumber">
+          <span>{{ hasNumber ? '✓' : '·' }}</span> A number
+        </li>
+        <li class="text-xs flex items-center gap-1.5" [class.text-green-600]="hasSymbol" [class.text-gray-400]="!hasSymbol">
+          <span>{{ hasSymbol ? '✓' : '·' }}</span> A symbol (e.g. !, &#64;, #, $)
+        </li>
+      </ul>
+    </div>
+
+    @if (error()) {
+      <p class="text-sm text-red-600">{{ error() }}</p>
+    }
+
+    <button
+      type="submit"
+      [disabled]="loading() || !isPasswordStrong || !isPhoneValid"
+      class="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg transition"
+    >
+      {{ loading() ? 'Creating account…' : 'Create account' }}
+    </button>
+  </form>
+
+  <p class="text-sm text-gray-500 mt-6 text-center">
+    Already have an account? <a routerLink="/login" class="text-brand-600 hover:underline">Log in</a>
+  </p>
+</div>

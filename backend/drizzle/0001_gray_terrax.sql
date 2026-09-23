@@ -1,0 +1,2 @@
+CREATE TYPE "public"."product_availability" AS ENUM('READILY_AVAILABLE', 'BY_ORDER');--> statement-breakpoint
+ALTER TABLE "products" ADD COLUMN "availability" "product_availability" DEFAULT 'READILY_AVAILABLE' NOT NULL;

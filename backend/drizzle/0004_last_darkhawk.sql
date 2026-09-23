@@ -1,0 +1,1 @@
+ALTER TABLE "reviews" ADD COLUMN "images" text[] DEFAULT '{}' NOT NULL;

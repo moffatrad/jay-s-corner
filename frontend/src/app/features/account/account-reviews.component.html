@@ -1,0 +1,111 @@
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+  <h1 class="text-2xl font-bold text-gray-900 mb-4">My Account</h1>
+  <app-profile-tabs />
+
+  <section>
+    <h2 class="font-semibold text-gray-900 mb-1">My Reviews</h2>
+    <p class="text-sm text-gray-500 mb-3">Visit a product page to rate it and leave a comment.</p>
+
+    @if (loading()) {
+      <p class="text-gray-500 text-sm">Loading…</p>
+    } @else if (reviews().length === 0) {
+      <p class="text-gray-500 text-sm">You haven't reviewed any products yet.</p>
+    } @else {
+      <div class="space-y-3">
+        @for (r of reviews(); track r.id) {
+          <div class="bg-white border border-gray-200 rounded-xl p-4">
+            @if (editingId() === r.id) {
+              <p class="font-medium text-gray-900 mb-2">{{ r.product?.name }}</p>
+              <app-star-rating [rating]="editRating" [interactive]="true" size="md" (ratingChange)="editRating = $event" />
+              <textarea
+                [(ngModel)]="editComment"
+                rows="3"
+                placeholder="How was the product?"
+                class="w-full mt-2 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              ></textarea>
+
+              @if (editImages.length > 0) {
+                <div class="flex flex-wrap gap-2 mt-2">
+                  @for (img of editImages; track img; let i = $index) {
+                    <div class="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200 group">
+                      <img [src]="img" class="w-full h-full object-cover" alt="" />
+                      <button
+                        type="button"
+                        (click)="removeImage(i)"
+                        class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white text-xs font-bold"
+                        aria-label="Remove photo"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+
+              @if (editImages.length < 5) {
+                <label class="flex items-center justify-center gap-2 border border-dashed border-gray-300 rounded-lg px-3 py-2 mt-2 text-sm text-gray-600 cursor-pointer hover:border-brand-400 hover:text-brand-600 transition">
+                  @if (uploadingImage()) {
+                    <span>Uploading…</span>
+                  } @else {
+                    <span>Add photos</span>
+                  }
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    multiple
+                    class="hidden"
+                    [disabled]="uploadingImage()"
+                    (change)="onImageSelected($event)"
+                  />
+                </label>
+              }
+
+              @if (imageError()) {
+                <p class="text-red-600 text-xs mt-1">{{ imageError() }}</p>
+              }
+
+              <div class="flex gap-2 mt-2">
+                <button (click)="cancelEdit()" class="flex-1 border border-gray-300 rounded-lg py-2 text-sm font-medium text-gray-700">Cancel</button>
+                <button
+                  (click)="saveEdit(r)"
+                  [disabled]="saving() || editRating < 1"
+                  class="flex-1 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-lg py-2 text-sm font-semibold"
+                >
+                  {{ saving() ? 'Saving…' : 'Save' }}
+                </button>
+              </div>
+            } @else {
+              <div class="flex justify-between items-start gap-3">
+                <div class="flex-1">
+                  <a [routerLink]="['/products', r.productId]" class="font-medium text-gray-900 hover:text-brand-600 transition">
+                    {{ r.product?.name }}
+                  </a>
+                  <div class="mt-1">
+                    <app-star-rating [rating]="r.rating" />
+                  </div>
+                  @if (r.comment) {
+                    <p class="text-sm text-gray-600 mt-2">{{ r.comment }}</p>
+                  }
+                  @if (r.images.length > 0) {
+                    <div class="flex flex-wrap gap-2 mt-2">
+                      @for (img of r.images; track img) {
+                        <a [href]="img" target="_blank" rel="noopener" class="block w-14 h-14 rounded-lg overflow-hidden border border-gray-200">
+                          <img [src]="img" alt="Review photo" class="w-full h-full object-cover" />
+                        </a>
+                      }
+                    </div>
+                  }
+                  <p class="text-xs text-gray-400 mt-2">{{ r.updatedAt | date: 'mediumDate' }}</p>
+                </div>
+                <div class="flex flex-col gap-1 shrink-0">
+                  <button (click)="startEdit(r)" class="text-xs font-semibold text-brand-600 hover:underline">Edit</button>
+                  <button (click)="remove(r)" class="text-xs font-semibold text-red-500 hover:underline">Delete</button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </section>
+</div>

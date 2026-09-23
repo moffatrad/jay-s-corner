@@ -7,7 +7,6 @@ import conversationRoutes from "./routes/conversationRoutes";
 import uploadRoutes from "./routes/uploadRoutes";
 import reviewRoutes from "./routes/reviewRoutes";
 import orderRoutes from "./routes/orderRoutes";
-import { uploadsDir } from "./lib/upload";
 
 const app = express();
 
@@ -18,7 +17,6 @@ app.use(
   })
 );
 app.use(express.json({ limit: "2mb" }));
-app.use("/uploads", express.static(uploadsDir));
 
 app.get("/api/health", (_req, res) => res.json({ ok: true, service: "jays-corner-backend" }));
 
